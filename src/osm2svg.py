@@ -11,6 +11,7 @@ from sre_constants import SRE_FLAG_IGNORECASE	# regular expressions
 import sys										# command  argument handling
 from urllib.request import urlopen				# downloading a file from the web 
 import xml.etree.ElementTree as ET				# XML processing
+import os										# path handling
 
 from math import ceil
 
@@ -86,12 +87,12 @@ for current_index in range(1, len(sys.argv)):
 	else:
 		arg_match = re.match(MATCHER_FILE_XML, current_arg, SRE_FLAG_IGNORECASE)
 		if (arg_match):
-			path_xml = current_arg
+			path_xml = os.path.abspath(current_arg)
 		# Is the argument a valid SVG file path?
 		else:
 			arg_match = re.match(MATCHER_FILE_SVG, current_arg, SRE_FLAG_IGNORECASE)
 			if (arg_match):
-				path_svg = current_arg
+				path_svg = os.path.abspath(current_arg)
 
 # now we have the input arguments handled
 
@@ -104,10 +105,15 @@ if (source_url != None and osm_id != None and osm_type != None and (path_xml != 
 	download_url = OVERPASS_URL.format(id = osm_id, type = 'rel' if osm_type == 'relation' else osm_type)
 	source_content = urlopen(download_url).read().decode('utf-8')
 	if (path_xml != None):
-		file_xml = open(path_xml, 'wb')
-		file_xml.write(source_content.encode('utf-8'))
-		file_xml.close()
-		print('successful, written to {file}.'.format(file = path_xml))
+		print('successful', end = '')
+		try:
+			file_xml = open(path_xml, 'wb')
+			file_xml.write(source_content.encode('utf-8'))
+			file_xml.close()
+			print(', written to "{file}".'.format(file = path_xml))
+		except FileNotFoundError:
+			print('.')
+			print('Could not write OpenStreetMap data to "{file}". Path not existing? Missing permissions?'.format(file = path_xml))
 	else:
 		print('successful.')
 	if (path_svg != None):
@@ -355,8 +361,11 @@ if (proceed and path_svg != None):
 
 	# output
 	svg_tree = ET.ElementTree(svg_root)
-	svg_tree.write(path_svg)
-	print('SVG file written to \'{path_svg}\'.'.format(path_svg = path_svg))
+	try:
+		svg_tree.write(path_svg)
+		print('SVG file written to "{path_svg}".'.format(path_svg = path_svg))
+	except FileNotFoundError:
+		print('Could not write SVG file to "{file}". Path not existing? Missing permissions?'.format(file = path_svg))
 
 # Command  arguments have not been useful? Output open feedback
 if (not proceed):
