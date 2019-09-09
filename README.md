@@ -28,10 +28,10 @@ What does all this mean?
 
 The order of `URL`, `xmlfile` and  `svgfile` does not matter.
 
-A short example could look like this:
+A short example could look like this (assuming that `python`points to Python 3):
 
 ```
-python3 osm2xml https://www.openstreetmap.org/relation/62450 suhl.svg
+python osm2svg.py https://www.openstreetmap.org/relation/62450 suhl.svg
 ```
 
 This will download the administrative boundary of Suhl, a town in Thuringia in
